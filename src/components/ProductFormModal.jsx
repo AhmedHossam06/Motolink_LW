@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, ImagePlus, Trash2 } from "lucide-react";
 import * as api from "../api";
+import { resolveImageUrl } from "../api";
 
 // Same modal handles both "create" (product = null) and "edit" (product = existing product)
 export default function ProductFormModal({ product, onClose, onSaved }) {
@@ -14,9 +15,28 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
   const [brand, setBrand] = useState(product?.brand || "");
   const [categoryId, setCategoryId] = useState(product?.category?.id || "");
   const [stockQuantity, setStockQuantity] = useState(product?.stockQuantity ?? "");
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Object URLs for previewing newly-selected files before upload; revoke them on change/unmount
+  const [previews, setPreviews] = useState([]);
+  useEffect(() => {
+    const urls = imageFiles.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [imageFiles]);
+
+  const handleFilesSelected = (e) => {
+    const files = Array.from(e.target.files || []);
+    setImageFiles((prev) => [...prev, ...files]);
+    // Reset the input so selecting the same file again still fires onChange
+    e.target.value = "";
+  };
+
+  const removeSelectedFile = (index) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     api.getCategories().then(setCategories).catch(() => setCategories([]));
@@ -53,9 +73,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
     try {
       if (isEditing) {
-        await api.updateProduct(product.id, payload, imageFile);
+        await api.updateProduct(product.id, payload, imageFiles);
       } else {
-        await api.createProduct(payload, imageFile);
+        await api.createProduct(payload, imageFiles);
       }
       onSaved();
     } catch (err) {
@@ -184,14 +204,60 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
 
           <div>
             <label className="block text-sm font-medium text-motolink-blue-dark mb-1">
-              {isEditing ? "Replace image (optional)" : "Image (optional)"}
+              Photos
             </label>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              className="w-full text-sm text-motolink-slate file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-motolink-blue-light file:text-motolink-blue file:text-sm file:font-medium file:cursor-pointer cursor-pointer"
-            />
+
+            {isEditing && product?.imageUrls?.length > 0 && imageFiles.length === 0 && (
+              <>
+                <div className="flex gap-2 flex-wrap mb-2">
+                  {product.imageUrls.map((url) => (
+                    <img
+                      key={url}
+                      src={resolveImageUrl(url)}
+                      alt={product.name}
+                      className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                    />
+                  ))}
+                </div>
+                <p className="text-motolink-slate text-xs mb-2">
+                  Current photos shown above. Choosing new ones below will replace all of them.
+                </p>
+              </>
+            )}
+
+            {previews.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {previews.map((url, index) => (
+                  <div key={url} className="relative w-16 h-16 shrink-0">
+                    <img
+                      src={url}
+                      alt={`Selected ${index + 1}`}
+                      className="w-full h-full rounded-lg object-cover border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSelectedFile(index)}
+                      aria-label="Remove photo"
+                      className="absolute -top-1.5 -right-1.5 bg-white border border-gray-200 rounded-full p-0.5 text-red-600 hover:bg-red-50 cursor-pointer"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label className="flex items-center justify-center gap-2 w-full border border-dashed border-gray-300 rounded-lg px-3 py-3 text-sm text-motolink-blue font-medium cursor-pointer hover:bg-motolink-blue-light/40 transition-colors">
+              <ImagePlus size={16} />
+              Add photos
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={handleFilesSelected}
+                className="hidden"
+              />
+            </label>
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}

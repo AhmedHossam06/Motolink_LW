@@ -1,14 +1,52 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Banknote } from "lucide-react";
+import instapayLogo from "../assets/instapay-logo.jpg";
+import vodafoneCashLogo from "../assets/vodafone-cash-logo.png";
+
+const PAYMENT_METHODS = [
+  {
+    value: "instapay",
+    label: "Instapay",
+    Logo: () => (
+      <img
+        src={instapayLogo}
+        alt="Instapay"
+        className="w-9 h-9 rounded-md object-contain bg-white shrink-0"
+      />
+    ),
+  },
+  {
+    value: "vodafone_cash",
+    label: "Vodafone Cash",
+    Logo: () => (
+      <img
+        src={vodafoneCashLogo}
+        alt="Vodafone Cash"
+        className="w-9 h-9 rounded-full object-contain shrink-0"
+      />
+    ),
+  },
+  {
+    value: "cash_on_delivery",
+    label: "Cash",
+    Logo: () => (
+      <span className="flex items-center justify-center w-9 h-9 rounded-md bg-motolink-blue/10 text-motolink-blue shrink-0">
+        <Banknote size={18} />
+      </span>
+    ),
+  },
+];
 
 export default function CheckoutModal({ onConfirm, onClose, submitting }) {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [addressTouched, setAddressTouched] = useState(false);
+  const [paymentTouched, setPaymentTouched] = useState(false);
 
   const phoneValid = /^01[0125][0-9]{8}$/.test(phone);
-  const valid = phoneValid && address.trim() !== "";
+  const valid = phoneValid && address.trim() !== "" && paymentMethod !== "";
 
   const handlePhoneChange = (e) => {
     // Strip anything that isn't a digit as the user types, cap at 11 digits
@@ -20,8 +58,9 @@ export default function CheckoutModal({ onConfirm, onClose, submitting }) {
     e.preventDefault();
     setPhoneTouched(true);
     setAddressTouched(true);
+    setPaymentTouched(true);
     if (!valid) return;
-    onConfirm(phone.trim(), address.trim());
+    onConfirm(phone.trim(), address.trim(), paymentMethod);
   };
 
   return (
@@ -81,6 +120,39 @@ export default function CheckoutModal({ onConfirm, onClose, submitting }) {
             />
             {addressTouched && address.trim() === "" && (
               <p className="text-red-600 text-xs mt-1">Address is required.</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-motolink-blue-dark mb-1">
+              Payment method
+            </label>
+            <div className="flex flex-col gap-2">
+              {PAYMENT_METHODS.map(({ value, label, Logo }) => (
+                <label
+                  key={value}
+                  className={`flex items-center gap-3 border rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors ${
+                    paymentMethod === value
+                      ? "border-motolink-blue ring-2 ring-motolink-blue/30"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={value}
+                    checked={paymentMethod === value}
+                    onChange={() => setPaymentMethod(value)}
+                    onBlur={() => setPaymentTouched(true)}
+                    className="accent-motolink-blue"
+                  />
+                  <Logo />
+                  <span className="text-motolink-blue-dark font-medium">{label}</span>
+                </label>
+              ))}
+            </div>
+            {paymentTouched && paymentMethod === "" && (
+              <p className="text-red-600 text-xs mt-1">Please choose a payment method.</p>
             )}
           </div>
 

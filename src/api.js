@@ -80,8 +80,11 @@ export const removeWishlistItem = (wishlistItemId) =>
   request(`/api/wishlist/items/${wishlistItemId}`, { method: "DELETE" });
 
 // ---------- Orders ----------
-export const checkout = (phone, address) =>
-  request("/api/orders", { method: "POST", body: JSON.stringify({ phone, address }) });
+export const checkout = (phone, address, paymentMethod) =>
+  request("/api/orders", {
+    method: "POST",
+    body: JSON.stringify({ phone, address, paymentMethod }),
+  });
 export const getOrders = () => request("/api/orders");
 export const getOrder = (id) => request(`/api/orders/${id}`);
 
@@ -126,23 +129,23 @@ async function requestMultipart(path, options = {}) {
 }
 
 // productData: { name, description, price, brand, categoryId, stockQuantity }
-export const createProduct = (productData, imageFile) => {
+export const createProduct = (productData, imageFiles = []) => {
   const formData = new FormData();
   formData.append(
     "product",
     new Blob([JSON.stringify(productData)], { type: "application/json" })
   );
-  if (imageFile) formData.append("image", imageFile);
+  imageFiles.forEach((file) => formData.append("images", file));
   return requestMultipart("/api/products", { method: "POST", body: formData });
 };
 
-export const updateProduct = (id, productData, imageFile) => {
+export const updateProduct = (id, productData, imageFiles = []) => {
   const formData = new FormData();
   formData.append(
     "product",
     new Blob([JSON.stringify(productData)], { type: "application/json" })
   );
-  if (imageFile) formData.append("image", imageFile);
+  imageFiles.forEach((file) => formData.append("images", file));
   return requestMultipart(`/api/products/${id}`, { method: "PUT", body: formData });
 };
 

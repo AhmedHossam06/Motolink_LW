@@ -72,9 +72,9 @@ export default function AdminProducts() {
                   className="bg-white border border-motolink-blue-light rounded-xl p-4"
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    {p.imageUrl && (
+                    {p.imageUrls?.[0] && (
                       <img
-                        src={resolveImageUrl(p.imageUrl)}
+                        src={resolveImageUrl(p.imageUrls[0])}
                         alt={p.name}
                         className="w-12 h-12 rounded-lg object-cover bg-motolink-blue-light shrink-0"
                       />
@@ -149,9 +149,9 @@ export default function AdminProducts() {
                     <tr key={p.id} className="border-t border-motolink-blue-light">
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
-                          {p.imageUrl && (
+                          {p.imageUrls?.[0] && (
                             <img
-                              src={resolveImageUrl(p.imageUrl)}
+                              src={resolveImageUrl(p.imageUrls[0])}
                               alt={p.name}
                               className="w-8 h-8 rounded-lg object-cover bg-motolink-blue-light shrink-0"
                             />

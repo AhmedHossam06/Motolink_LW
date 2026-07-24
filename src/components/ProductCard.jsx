@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { resolveImageUrl, formatPrice } from "../api";
 import { useCart } from "../context/CartContext";
@@ -15,9 +15,20 @@ export default function ProductCard({ product }) {
   const [cartBusy, setCartBusy] = useState(false);
   const [wishBusy, setWishBusy] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
   const wishlisted = isWishlisted(product.id);
   const onSale = product.onSale && product.salePrice != null;
+  const images = product.imageUrls || [];
+
+  // Auto-cycle through photos when a product has more than one
+  useEffect(() => {
+    if (images.length < 2) return;
+    const interval = setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % images.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   const handleAddToCart = async () => {
     setCartBusy(true);
@@ -58,12 +69,31 @@ export default function ProductCard({ product }) {
             Sale
           </span>
         )}
-        {product.imageUrl ? (
-          <img
-            src={resolveImageUrl(product.imageUrl)}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+        {images.length > 0 ? (
+          <>
+            {images.map((url, index) => (
+              <img
+                key={url}
+                src={resolveImageUrl(url)}
+                alt={product.name}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+                  index === activeImage ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ))}
+            {images.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1">
+                {images.map((_, index) => (
+                  <span
+                    key={index}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      index === activeImage ? "bg-white" : "bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-motolink-slate text-sm">
             No image

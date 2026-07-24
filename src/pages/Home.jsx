@@ -70,10 +70,21 @@ function ProductCard({ product, onQuickAdd, busy }) {
     removeFromWishlist,
   } = useWishlist();
   const [wishBusy, setWishBusy] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
 
   const onSale = product.onSale && product.salePrice != null;
   const wishlisted = isWishlisted(product.id);
   const outOfStock = product.stockQuantity === 0;
+  const images = product.imageUrls || [];
+
+  // Auto-cycle through photos when a product has more than one
+  useEffect(() => {
+    if (images.length < 2) return;
+    const interval = setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % images.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [images.length]);
 
   const handleToggleWishlist = async (e) => {
     e.preventDefault(); // don't follow the card's link when tapping the heart
@@ -125,14 +136,29 @@ function ProductCard({ product, onQuickAdd, busy }) {
 
       <Link
         to={`/product/${product.id}`}
-        className="block aspect-square bg-motolink-blue-light/40"
+        className="block relative aspect-square bg-motolink-blue-light/40"
       >
-        {product.imageUrl && (
+        {images.map((url, index) => (
           <img
-            src={resolveImageUrl(product.imageUrl)}
+            key={url}
+            src={resolveImageUrl(url)}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+              index === activeImage ? "opacity-100" : "opacity-0"
+            }`}
           />
+        ))}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1">
+            {images.map((_, index) => (
+              <span
+                key={index}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  index === activeImage ? "bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
         )}
       </Link>
       <div className="p-3 sm:p-4 flex flex-col flex-1">
@@ -281,8 +307,11 @@ export default function Home() {
 
   // Featured now pulls from the whole product list so the slider has more than one page to show
   const featuredPool = allProducts;
-  // Deals shows products the admin actually put on sale, not a random slice
-  const deals = allProducts.filter((p) => p.onSale).slice(0, 8);
+  // Deals & Bundles shows products the admin put on sale, plus anything filed under
+  // the "Bundle" category - regardless of whether it's also on sale
+  const deals = allProducts
+    .filter((p) => p.onSale || p.category?.name === "Bundle")
+    .slice(0, 8);
 
   // Real brands pulled from the products themselves, not hardcoded
   // (kept in case the Top Brands section below gets re-enabled)
@@ -390,6 +419,28 @@ export default function Home() {
           </div>
         )}
       </section>
+            {/* Deals - only real on-sale products, set by the admin */}
+            {!productsLoading && deals.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <div className="flex items-center gap-2 mb-6">
+            <Tag className="text-motolink-blue" size={20} />
+            <h2 className="font-display font-bold text-2xl text-motolink-blue-dark">
+              Deals &amp; Bundles
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 items-start">
+            {deals.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                busy={busyProductId === product.id}
+                onQuickAdd={handleQuickAdd}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
 
       {/* Featured Gear - sliding carousel, 4 products per slide */}
       <section className="max-w-7xl mx-auto px-6 py-12">
@@ -422,27 +473,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* Deals - only real on-sale products, set by the admin */}
-      {!productsLoading && deals.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex items-center gap-2 mb-6">
-            <Tag className="text-motolink-blue" size={20} />
-            <h2 className="font-display font-bold text-2xl text-motolink-blue-dark">
-              Deals
-            </h2>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 items-start">
-            {deals.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                busy={busyProductId === product.id}
-                onQuickAdd={handleQuickAdd}
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Top Brands - pulled from actual product data, not hardcoded
       {!productsLoading && brands.length > 0 && (

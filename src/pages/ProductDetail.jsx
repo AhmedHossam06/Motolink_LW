@@ -25,7 +25,10 @@ export default function ProductDetail() {
     setLoading(true);
     api
       .getProduct(id)
-      .then(setProduct)
+      .then((data) => {
+        setProduct(data);
+        setActiveImage(0);
+      })
       .catch((err) => setError(err.body?.message || "Couldn't load this product."))
       .finally(() => setLoading(false));
   }, [id]);
@@ -42,6 +45,8 @@ export default function ProductDetail() {
       setAdding(false);
     }
   };
+
+  const [activeImage, setActiveImage] = useState(0);
 
   const wishlisted = product ? isWishlisted(product.id) : false;
 
@@ -91,19 +96,43 @@ export default function ProductDetail() {
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {/* Image */}
-        <div className="relative aspect-square bg-motolink-blue-light/40 rounded-xl overflow-hidden">
-          {onSale && (
-            <span className="absolute top-3 left-3 z-10 bg-red-600 text-white text-xs font-display font-bold uppercase tracking-wide px-2.5 py-1 rounded-md">
-              Sale
-            </span>
-          )}
-          {product.imageUrl && (
-            <img
-              src={resolveImageUrl(product.imageUrl)}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
+        {/* Image gallery */}
+        <div>
+          <div className="relative aspect-square bg-motolink-blue-light/40 rounded-xl overflow-hidden">
+            {onSale && (
+              <span className="absolute top-3 left-3 z-10 bg-red-600 text-white text-xs font-display font-bold uppercase tracking-wide px-2.5 py-1 rounded-md">
+                Sale
+              </span>
+            )}
+            {product.imageUrls?.[activeImage] && (
+              <img
+                src={resolveImageUrl(product.imageUrls[activeImage])}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            )}
+          </div>
+
+          {product.imageUrls?.length > 1 && (
+            <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+              {product.imageUrls.map((url, index) => (
+                <button
+                  key={url}
+                  onClick={() => setActiveImage(index)}
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-colors cursor-pointer ${
+                    index === activeImage
+                      ? "border-motolink-blue"
+                      : "border-transparent hover:border-motolink-blue-light"
+                  }`}
+                >
+                  <img
+                    src={resolveImageUrl(url)}
+                    alt={`${product.name} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           )}
         </div>
 

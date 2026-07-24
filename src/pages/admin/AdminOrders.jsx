@@ -1,23 +1,29 @@
 import { useEffect, useState } from "react";
-import { Mail, Phone, MapPin, Truck, X } from "lucide-react";
+import { Mail, Phone, MapPin, Truck, X, Wallet } from "lucide-react";
 import * as api from "../../api";
 import { formatPrice } from "../../api";
 
 const STATUS_STYLES = {
-  PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+  Order_placed: "bg-amber-50 text-amber-700 border-amber-200",
   SHIPPED: "bg-emerald-50 text-emerald-700 border-emerald-200",
   CANCELLED: "bg-red-50 text-red-700 border-red-200",
 };
 
 const STATUS_LABELS = {
-  PENDING: "order placed",
+  Order_placed: "order placed",
   SHIPPED: "shipped",
   CANCELLED: "cancelled",
 };
 
+const PAYMENT_METHOD_LABELS = {
+  instapay: "Instapay",
+  vodafone_cash: "Vodafone Cash",
+  cash_on_delivery: "Cash",
+};
+
 const FILTERS = [
   { value: "ALL", label: "all" },
-  { value: "PENDING", label: "order placed" },
+  { value: "Order_placed", label: "order placed" },
   { value: "SHIPPED", label: "shipped" },
   { value: "CANCELLED", label: "cancelled" },
 ];
@@ -158,6 +164,15 @@ export default function AdminOrders() {
                     {order.address || "—"}
                   </p>
                 </div>
+                <div>
+                  <p className="text-motolink-slate text-xs uppercase tracking-wide mb-1">
+                    Payment
+                  </p>
+                  <p className="flex items-center gap-1.5 text-motolink-blue-dark">
+                    <Wallet size={14} className="text-motolink-slate shrink-0" />
+                    {PAYMENT_METHOD_LABELS[order.paymentMethod] || order.paymentMethod || "—"}
+                  </p>
+                </div>
               </div>
 
               <div className="border-t border-motolink-blue-light pt-3 mb-4">
@@ -180,7 +195,7 @@ export default function AdminOrders() {
                   {formatPrice(order.totalAmount)}
                 </p>
 
-                {order.status === "PENDING" ? (
+                {order.status === "Order_placed" ? (
                   <div className="flex gap-2">
                     <button
                       onClick={() => setStatus(order.id, "CANCELLED")}

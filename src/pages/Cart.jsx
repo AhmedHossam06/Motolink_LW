@@ -42,11 +42,11 @@ export default function Cart() {
     }
   };
 
-  const handleCheckout = async (phone, address) => {
+  const handleCheckout = async (phone, address, paymentMethod) => {
     setError("");
     setCheckingOut(true);
     try {
-      await api.checkout(phone, address);
+      await api.checkout(phone, address, paymentMethod);
       await refreshCart();
       setShowModal(false);
       navigate("/profile");

@@ -81,9 +81,9 @@ export default function AllProducts() {
                 )}
 
                 <Link to={`/product/${product.id}`} className="block aspect-square bg-motolink-blue-light/40">
-                  {product.imageUrl && (
+                  {product.imageUrls?.[0] && (
                     <img
-                      src={resolveImageUrl(product.imageUrl)}
+                      src={resolveImageUrl(product.imageUrls[0])}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />

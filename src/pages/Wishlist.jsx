@@ -56,9 +56,9 @@ export default function Wishlist() {
                       Sale
                     </span>
                   )}
-                  {item.product.imageUrl && (
+                  {item.product.imageUrls?.[0] && (
                     <img
-                      src={resolveImageUrl(item.product.imageUrl)}
+                      src={resolveImageUrl(item.product.imageUrls[0])}
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                     />
