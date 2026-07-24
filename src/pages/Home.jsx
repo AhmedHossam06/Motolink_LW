@@ -16,12 +16,12 @@ import {
 } from "lucide-react";
 import heroVideo from "../assets/Home_page_video.mp4";
 import heroPoster from "../assets/hero.png";
-import helmetHeadsets from "../assets/helmet-headsets.png";
-import motorcycleNavigator from "../assets/motorcycle-navigator.png";
-import mobileHolders from "../assets/mobile-holders.png";
-import cruiseControl from "../assets/cruise-control.png";
-import wirelessControllers from "../assets/wireless-controllers.png";
-import tirePressureMonitoring from "../assets/tire-pressure-monitoring.png";
+import helmetHeadsets from "../assets/helmet-headsets.jpeg";
+import motorcycleNavigator from "../assets/motorcycle-navigator.jpeg";
+import mobileHolders from "../assets/mobile-holders.jpeg";
+import cruiseControl from "../assets/cruise-control.jpeg";
+import wirelessControllers from "../assets/wireless-controllers.jpeg";
+import tirePressureMonitoring from "../assets/tire-pressure-monitoring.jpeg";
 import * as api from "../api";
 import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
