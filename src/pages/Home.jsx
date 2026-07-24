@@ -73,6 +73,7 @@ function ProductCard({ product, onQuickAdd, busy }) {
 
   const onSale = product.onSale && product.salePrice != null;
   const wishlisted = isWishlisted(product.id);
+  const outOfStock = product.stockQuantity === 0;
 
   const handleToggleWishlist = async (e) => {
     e.preventDefault(); // don't follow the card's link when tapping the heart
@@ -160,11 +161,11 @@ function ProductCard({ product, onQuickAdd, busy }) {
 
         <button
           onClick={() => onQuickAdd(product.id)}
-          disabled={busy}
+          disabled={busy || outOfStock}
           className="w-full flex items-center justify-center gap-1.5 bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white text-xs sm:text-sm font-display font-semibold py-2 rounded-lg cursor-pointer disabled:cursor-default"
         >
           <ShoppingCart size={14} />
-          {busy ? "Adding…" : "Add to cart"}
+          {busy ? "Adding…" : outOfStock ? "Out of stock" : "Add to cart"}
         </button>
       </div>
     </div>
@@ -369,12 +370,12 @@ export default function Home() {
                   to={`/category/${category.id}`}
                   className="cursor-pointer flex flex-col items-center gap-2 bg-white border border-motolink-blue-light rounded-xl p-5 hover:border-motolink-blue hover:shadow-sm transition-all text-center"
                 >
-                  <div className="p-3 rounded-full bg-motolink-blue-light w-16 h-16 flex items-center justify-center">
+                  <div className="rounded-full bg-motolink-blue-light w-16 h-16 flex items-center justify-center overflow-hidden">
                     {image ? (
                       <img
                         src={image}
                         alt={category.name}
-                        className="w-8 h-8 object-contain"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <Package className="text-motolink-blue" size={22} />
