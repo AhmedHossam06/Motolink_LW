@@ -37,7 +37,7 @@ export default function AdminProducts() {
       setProducts((prev) => prev.filter((p) => p.id !== id));
       showToast("Product deleted successfully", "success");
     } catch (err) {
-      const message = err.body?.message || "Couldn't delete the product.";
+      const message = "Couldn't delete the product because one customer have it in his cart.";
       setError(message);
       showToast(message, "danger");
     } finally {
