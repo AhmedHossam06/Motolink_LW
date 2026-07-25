@@ -43,6 +43,14 @@ function FacebookIcon(props) {
             >
               <InstagramIcon />
             </a>
+            <a
+          href="https://astra-web-rust.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-motolink-slate hover:text-motolink-blue transition-colors"
+        >
+          Built by Astraweb
+        </a>
           </div>
         </div>
       </footer>
