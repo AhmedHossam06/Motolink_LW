@@ -5,6 +5,94 @@ import * as api from "../api";
 import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+
+// Separate component (not inlined in the .map()) so each card gets its own
+// activeImage state/interval for the photo carousel.
+function ProductGridCard({ product, onQuickAdd, busy }) {
+  const [activeImage, setActiveImage] = useState(0);
+  const onSale = product.onSale && product.salePrice != null;
+  const images = product.imageUrls || [];
+
+  useEffect(() => {
+    if (images.length < 2) return;
+    const interval = setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % images.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [images.length]);
+
+  return (
+    <div className="relative bg-white border border-motolink-blue-light rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col">
+      {onSale && (
+        <span className="absolute top-2 left-2 z-10 bg-red-600 text-white text-[11px] font-display font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+          Sale
+        </span>
+      )}
+
+      <Link to={`/product/${product.id}`} className="block relative aspect-square bg-motolink-blue-light/40">
+        {images.map((url, index) => (
+          <img
+            key={url}
+            src={resolveImageUrl(url)}
+            alt={product.name}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+              index === activeImage ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1">
+            {images.map((_, index) => (
+              <span
+                key={index}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  index === activeImage ? "bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </Link>
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
+        <Link to={`/product/${product.id}`}>
+          <h3 className="font-display font-semibold text-sm sm:text-base text-motolink-blue-dark line-clamp-2 mb-1">
+            {product.name}
+          </h3>
+        </Link>
+        {product.brand && (
+          <p className="text-motolink-slate text-xs mb-1">{product.brand}</p>
+        )}
+
+        <div className="mt-auto mb-3">
+          {onSale ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-display font-bold text-red-600 text-sm sm:text-base">
+                {formatPrice(product.salePrice)}
+              </span>
+              <span className="text-motolink-slate text-xs sm:text-sm line-through">
+                {formatPrice(product.price)}
+              </span>
+            </div>
+          ) : (
+            <span className="font-display font-bold text-motolink-blue-dark text-sm sm:text-base">
+              {formatPrice(product.price)}
+            </span>
+          )}
+        </div>
+
+        <button
+          onClick={() => onQuickAdd(product.id)}
+          disabled={busy}
+          className="w-full flex items-center justify-center gap-1.5 bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white text-xs sm:text-sm font-display font-semibold py-2 rounded-lg cursor-pointer disabled:cursor-default"
+        >
+          <ShoppingCart size={14} />
+          {busy ? "Adding…" : "Add to cart"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function AllProducts() {
   const [products, setProducts] = useState([]);
@@ -15,6 +103,7 @@ export default function AllProducts() {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     api
@@ -35,8 +124,9 @@ export default function AllProducts() {
     setBusyProductId(productId);
     try {
       await addToCart(productId, 1);
+      showToast("Added to cart successfully", "success");
     } catch {
-      // Cart page will surface any real errors on open
+      showToast("Couldn't add to cart. Try again.", "danger");
     } finally {
       setBusyProductId(null);
     }
@@ -66,68 +156,14 @@ export default function AllProducts() {
         <p className="text-motolink-slate text-center py-16">No products available right now.</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-          {products.map((product) => {
-            const onSale = product.onSale && product.salePrice != null;
-
-            return (
-              <div
-                key={product.id}
-                className="relative bg-white border border-motolink-blue-light rounded-xl overflow-hidden hover:shadow-sm transition-shadow flex flex-col"
-              >
-                {onSale && (
-                  <span className="absolute top-2 left-2 z-10 bg-red-600 text-white text-[11px] font-display font-bold uppercase tracking-wide px-2 py-1 rounded-md">
-                    Sale
-                  </span>
-                )}
-
-                <Link to={`/product/${product.id}`} className="block aspect-square bg-motolink-blue-light/40">
-                  {product.imageUrls?.[0] && (
-                    <img
-                      src={resolveImageUrl(product.imageUrls[0])}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </Link>
-                <div className="p-3 sm:p-4 flex flex-col flex-1">
-                  <Link to={`/product/${product.id}`}>
-                    <h3 className="font-display font-semibold text-sm sm:text-base text-motolink-blue-dark line-clamp-2 mb-1">
-                      {product.name}
-                    </h3>
-                  </Link>
-                  {product.brand && (
-                    <p className="text-motolink-slate text-xs mb-1">{product.brand}</p>
-                  )}
-
-                  <div className="mt-auto mb-3">
-                    {onSale ? (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-display font-bold text-red-600 text-sm sm:text-base">
-                          {formatPrice(product.salePrice)}
-                        </span>
-                        <span className="text-motolink-slate text-xs sm:text-sm line-through">
-                          {formatPrice(product.price)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="font-display font-bold text-motolink-blue-dark text-sm sm:text-base">
-                        {formatPrice(product.price)}
-                      </span>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => handleQuickAdd(product.id)}
-                    disabled={busyProductId === product.id}
-                    className="w-full flex items-center justify-center gap-1.5 bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white text-xs sm:text-sm font-display font-semibold py-2 rounded-lg cursor-pointer disabled:cursor-default"
-                  >
-                    <ShoppingCart size={14} />
-                    {busyProductId === product.id ? "Adding…" : "Add to cart"}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {products.map((product) => (
+            <ProductGridCard
+              key={product.id}
+              product={product}
+              onQuickAdd={handleQuickAdd}
+              busy={busyProductId === product.id}
+            />
+          ))}
         </div>
       )}
     </main>

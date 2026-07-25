@@ -3,6 +3,8 @@ import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import * as api from "../../api";
 import { resolveImageUrl, formatPrice } from "../../api";
 import ProductFormModal from "../../components/ProductFormModal";
+import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmContext";
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -10,6 +12,8 @@ export default function AdminProducts() {
   const [error, setError] = useState("");
   const [modalProduct, setModalProduct] = useState(undefined);
   const [deletingId, setDeletingId] = useState(null);
+  const { showToast } = useToast();
+  const confirm = useConfirm();
 
   const loadProducts = () => {
     setLoading(true);
@@ -25,21 +29,30 @@ export default function AdminProducts() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this product? This can't be undone.")) return;
+    const confirmed = await confirm("Delete this product? This can't be undone.");
+    if (!confirmed) return;
     setDeletingId(id);
     try {
       await api.deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      showToast("Product deleted successfully", "success");
     } catch (err) {
-      setError(err.body?.message || "Couldn't delete the product.");
+      const message = err.body?.message || "Couldn't delete the product.";
+      setError(message);
+      showToast(message, "danger");
     } finally {
       setDeletingId(null);
     }
   };
 
   const handleSaved = () => {
+    const wasEditing = Boolean(modalProduct);
     setModalProduct(undefined);
     loadProducts();
+    showToast(
+      wasEditing ? "Product updated successfully" : "Product added successfully",
+      "success",
+    );
   };
 
   if (loading) return <p className="text-motolink-slate">Loading products…</p>;

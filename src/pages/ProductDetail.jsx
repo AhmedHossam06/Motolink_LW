@@ -6,6 +6,7 @@ import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useToast } from "../context/ToastContext";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -13,6 +14,7 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { items: wishlistItems, isWishlisted, addToWishlist, removeFromWishlist } = useWishlist();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,12 +43,38 @@ export default function ProductDetail() {
     setAdding(true);
     try {
       await addToCart(product.id, quantity);
+      showToast("Added to cart successfully", "success");
+    } catch {
+      showToast("Couldn't add to cart. Try again.", "danger");
     } finally {
       setAdding(false);
     }
   };
 
   const [activeImage, setActiveImage] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+
+  const handleGalleryTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleGalleryTouchEnd = (e) => {
+    if (touchStartX === null || !product?.imageUrls?.length) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    const SWIPE_THRESHOLD = 40; // px - ignore small accidental drags/taps
+
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD) {
+      const total = product.imageUrls.length;
+      if (deltaX < 0) {
+        // swiped left -> next image
+        setActiveImage((prev) => (prev + 1) % total);
+      } else {
+        // swiped right -> previous image
+        setActiveImage((prev) => (prev - 1 + total) % total);
+      }
+    }
+    setTouchStartX(null);
+  };
 
   const wishlisted = product ? isWishlisted(product.id) : false;
 
@@ -59,10 +87,16 @@ export default function ProductDetail() {
     try {
       if (wishlisted) {
         const existing = wishlistItems.find((item) => item.product.id === product.id);
-        if (existing) await removeFromWishlist(existing.id);
+        if (existing) {
+          await removeFromWishlist(existing.id);
+          showToast("Removed from wishlist", "info");
+        }
       } else {
         await addToWishlist(product.id);
+        showToast("Added to wishlist", "success");
       }
+    } catch {
+      showToast("Couldn't update your wishlist. Try again.", "danger");
     } finally {
       setWishBusy(false);
     }
@@ -98,18 +132,38 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {/* Image gallery */}
         <div>
-          <div className="relative aspect-square bg-motolink-blue-light/40 rounded-xl overflow-hidden">
+          <div
+            className="relative aspect-square bg-motolink-blue-light/40 rounded-xl overflow-hidden touch-pan-y"
+            onTouchStart={handleGalleryTouchStart}
+            onTouchEnd={handleGalleryTouchEnd}
+          >
             {onSale && (
               <span className="absolute top-3 left-3 z-10 bg-red-600 text-white text-xs font-display font-bold uppercase tracking-wide px-2.5 py-1 rounded-md">
                 Sale
               </span>
             )}
-            {product.imageUrls?.[activeImage] && (
+            {product.imageUrls?.map((url, index) => (
               <img
-                src={resolveImageUrl(product.imageUrls[activeImage])}
+                key={url}
+                src={resolveImageUrl(url)}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+                  index === activeImage ? "opacity-100" : "opacity-0"
+                }`}
               />
+            ))}
+
+            {product.imageUrls?.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+                {product.imageUrls.map((_, index) => (
+                  <span
+                    key={index}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      index === activeImage ? "bg-white" : "bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
             )}
           </div>
 

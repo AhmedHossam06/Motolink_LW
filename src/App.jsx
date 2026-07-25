@@ -13,12 +13,15 @@ import { homeLoader, categoryLoader } from "./loaders";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { ToastProvider } from "./context/ToastContext";
+import { ConfirmProvider } from "./context/ConfirmContext";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AllProducts from "./pages/AllProducts";
 import ProductDetail from "./pages/ProductDetail";
+
 
 const router = createBrowserRouter(
   [
@@ -61,7 +64,11 @@ export default function App() {
     <AuthProvider>
       <CartProvider>
         <WishlistProvider>
-          <RouterProvider router={router} />
+          <ToastProvider>
+            <ConfirmProvider>
+              <RouterProvider router={router} />
+            </ConfirmProvider>
+          </ToastProvider>
         </WishlistProvider>
       </CartProvider>
     </AuthProvider>

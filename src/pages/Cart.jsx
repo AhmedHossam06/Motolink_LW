@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useToast } from "../context/ToastContext";
 import CheckoutModal from "../components/CheckoutModal";
 import * as api from "../api";
 import { formatPrice } from "../api";
@@ -15,6 +16,7 @@ function getEffectivePrice(product) {
 
 export default function Cart() {
   const { items, refreshCart, updateQuantity, removeFromCart } = useCart();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -49,9 +51,12 @@ export default function Cart() {
       await api.checkout(phone, address, paymentMethod);
       await refreshCart();
       setShowModal(false);
+      showToast("Order placed successfully", "success");
       navigate("/profile");
     } catch (err) {
-      setError(err.body?.message || "Checkout failed. Please try again.");
+      const message = err.body?.message || "Checkout failed. Please try again.";
+      setError(message);
+      showToast(message, "danger");
     } finally {
       setCheckingOut(false);
     }

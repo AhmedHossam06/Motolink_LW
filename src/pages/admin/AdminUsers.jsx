@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { Trash2, ShieldCheck, ShieldOff } from "lucide-react";
 import * as api from "../../api";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
+import { useConfirm } from "../../context/ConfirmContext";
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
+  const { showToast } = useToast();
+  const confirm = useConfirm();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,26 +34,32 @@ export default function AdminUsers() {
     try {
       const updated = await api.updateUserRole(u.id, newRole);
       setUsers((prev) => prev.map((x) => (x.id === u.id ? updated : x)));
+      showToast(`${u.name}'s role updated successfully`, "success");
     } catch (err) {
-      setError(err.body?.message || "Couldn't update the user's role.");
+      const message = err.body?.message || "Couldn't update the user's role.";
+      setError(message);
+      showToast(message, "danger");
     } finally {
       setBusyId(null);
     }
   };
 
   const handleDelete = async (u) => {
-    if (!window.confirm(`Delete ${u.name}? This can't be undone.`)) return;
+    const confirmed = await confirm(`Delete ${u.name}? This can't be undone.`);
+    if (!confirmed) return;
     setBusyId(u.id);
     setError("");
     try {
       await api.deleteUser(u.id);
       setUsers((prev) => prev.filter((x) => x.id !== u.id));
+      showToast("User deleted successfully", "success");
     } catch (err) {
       const message =
         err.status === 500
           ? "This user has existing orders and can't be deleted."
           : err.body?.message || "Couldn't delete the user.";
       setError(message);
+      showToast(message, "danger");
     } finally {
       setBusyId(null);
     }

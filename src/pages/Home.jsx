@@ -22,11 +22,13 @@ import mobileHolders from "../assets/mobile-holders.jpeg";
 import cruiseControl from "../assets/cruise-control.jpeg";
 import wirelessControllers from "../assets/wireless-controllers.jpeg";
 import tirePressureMonitoring from "../assets/tire-pressure-monitoring.jpeg";
+import bundleImage from "../assets/bundle.jpg";
 import * as api from "../api";
 import { formatPrice, resolveImageUrl } from "../api";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useToast } from "../context/ToastContext";
 
 // Maps a category's slug to its bundled image.
 // Falls back to null so the card renders the generic Package icon
@@ -38,6 +40,7 @@ const CATEGORY_IMAGES = {
   "cruise-control": cruiseControl,
   "wireless-controllers": wirelessControllers,
   "tire-pressure-monitoring": tirePressureMonitoring,
+  bundle: bundleImage,
 };
 
 const RIDE_SMARTER_TIPS = [
@@ -69,6 +72,7 @@ function ProductCard({ product, onQuickAdd, busy }) {
     addToWishlist,
     removeFromWishlist,
   } = useWishlist();
+  const { showToast } = useToast();
   const [wishBusy, setWishBusy] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
 
@@ -101,10 +105,16 @@ function ProductCard({ product, onQuickAdd, busy }) {
         const existing = wishlistItems.find(
           (item) => item.product.id === product.id,
         );
-        if (existing) await removeFromWishlist(existing.id);
+        if (existing) {
+          await removeFromWishlist(existing.id);
+          showToast("Removed from wishlist", "info");
+        }
       } else {
         await addToWishlist(product.id);
+        showToast("Added to wishlist", "success");
       }
+    } catch (err) {
+      showToast("Couldn't update your wishlist. Try again.", "danger");
     } finally {
       setWishBusy(false);
     }
@@ -287,6 +297,7 @@ export default function Home() {
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [allProducts, setAllProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -333,8 +344,9 @@ export default function Home() {
     setBusyProductId(productId);
     try {
       await addToCart(productId, 1);
+      showToast("Added to cart successfully", "success");
     } catch {
-      // Cart page will surface any real errors on open
+      showToast("Couldn't add to cart. Try again.", "danger");
     } finally {
       setBusyProductId(null);
     }
@@ -441,7 +453,6 @@ export default function Home() {
         </section>
       )}
 
-
       {/* Featured Gear - sliding carousel, 4 products per slide */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-end justify-between mb-6">
@@ -472,6 +483,7 @@ export default function Home() {
           />
         )}
       </section>
+
 
 
       {/* Top Brands - pulled from actual product data, not hardcoded

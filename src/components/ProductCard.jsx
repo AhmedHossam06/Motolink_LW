@@ -3,6 +3,7 @@ import { Heart, ShoppingCart, Check } from "lucide-react";
 import { resolveImageUrl, formatPrice } from "../api";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useToast } from "../context/ToastContext";
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -12,6 +13,7 @@ export default function ProductCard({ product }) {
     removeFromWishlist,
     isWishlisted,
   } = useWishlist();
+  const { showToast } = useToast();
   const [cartBusy, setCartBusy] = useState(false);
   const [wishBusy, setWishBusy] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
@@ -35,9 +37,11 @@ export default function ProductCard({ product }) {
     try {
       await addToCart(product.id, 1);
       setJustAdded(true);
+      showToast("Added to cart successfully", "success");
       setTimeout(() => setJustAdded(false), 1500);
     } catch (err) {
       console.warn("Add to cart failed:", err.message);
+      showToast("Couldn't add to cart. Try again.", "danger");
     } finally {
       setCartBusy(false);
     }
@@ -50,12 +54,17 @@ export default function ProductCard({ product }) {
         const existing = wishlistItems.find(
           (item) => item.product.id === product.id,
         );
-        if (existing) await removeFromWishlist(existing.id);
+        if (existing) {
+          await removeFromWishlist(existing.id);
+          showToast("Removed from wishlist", "info");
+        }
       } else {
         await addToWishlist(product.id);
+        showToast("Added to wishlist", "success");
       }
     } catch (err) {
       console.warn("Wishlist toggle failed:", err.message);
+      showToast("Couldn't update your wishlist. Try again.", "danger");
     } finally {
       setWishBusy(false);
     }

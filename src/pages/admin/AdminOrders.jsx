@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Truck, X, Wallet } from "lucide-react";
 import * as api from "../../api";
 import { formatPrice } from "../../api";
+import { useToast } from "../../context/ToastContext";
 
 const STATUS_STYLES = {
   Order_placed: "bg-amber-50 text-amber-700 border-amber-200",
@@ -60,6 +61,7 @@ export default function AdminOrders() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [busyId, setBusyId] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     api
@@ -74,8 +76,14 @@ export default function AdminOrders() {
     try {
       const updated = await api.updateOrderStatus(orderId, status);
       setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+      showToast(
+        status === "CANCELLED" ? "Order cancelled successfully" : "Order shipped successfully",
+        "success",
+      );
     } catch (err) {
-      setError(err.body?.message || "Couldn't update the order. Try again.");
+      const message = err.body?.message || "Couldn't update the order. Try again.";
+      setError(message);
+      showToast(message, "danger");
     } finally {
       setBusyId(null);
     }

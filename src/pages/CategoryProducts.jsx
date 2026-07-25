@@ -33,7 +33,7 @@ export default function CategoryProducts() {
     <main className="max-w-7xl mx-auto px-6 py-10">
       <button
         onClick={() => navigate("/")}
-        className="text-sm text-motolink-blue font-medium mb-4"
+        className="text-sm text-motolink-blue font-medium mb-4 cursor-pointer"
       >
         ← Back to home
       </button>
