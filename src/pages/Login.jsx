@@ -29,8 +29,6 @@ export default function Login() {
       const loggedInUser = await loginUser(form.email, form.password);
       navigate(loggedInUser.role === "ADMIN" ? "/admin/orders" : "/", { replace: true });
     } catch (err) {
-      // Validation errors come back as a flat { field: message } map.
-      // Anything else (401, 500) comes back as { message, status, timestamp }.
       if (err.body && !err.body.message) {
         setFieldErrors(err.body);
       } else {
@@ -42,12 +40,12 @@ export default function Login() {
   };
 
   return (
-    <main className="min-h-[80vh] flex items-center justify-center bg-motolink-blue-light px-6 py-12">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm p-8">
-        <h1 className="font-display font-bold text-3xl text-motolink-blue-dark mb-1">
+    <main className="min-h-[80vh] flex items-center justify-center bg-motolink-blue-light px-4 sm:px-6 py-8 sm:py-12">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm p-6 sm:p-8">
+        <h1 className="font-display font-bold text-2xl sm:text-3xl text-motolink-blue-dark mb-1">
           Welcome back
         </h1>
-        <p className="text-motolink-slate text-sm mb-8">
+        <p className="text-motolink-slate text-sm mb-6 sm:mb-8">
           Log in to manage your orders and bike profile.
         </p>
 
@@ -56,8 +54,8 @@ export default function Login() {
             <label className="text-sm font-medium text-motolink-blue-dark">
               Email
             </label>
-            <div className="mt-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 focus-within:border-motolink-blue">
-              <Mail size={18} className="text-motolink-slate" />
+            <div className="mt-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 focus-within:border-motolink-blue">
+              <Mail size={18} className="text-motolink-slate shrink-0" />
               <input
                 type="email"
                 name="email"
@@ -65,7 +63,7 @@ export default function Login() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className="w-full outline-none text-sm"
+                className="w-full min-w-0 outline-none text-sm"
               />
             </div>
             {fieldErrors.email && (
@@ -77,8 +75,8 @@ export default function Login() {
             <label className="text-sm font-medium text-motolink-blue-dark">
               Password
             </label>
-            <div className="mt-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 focus-within:border-motolink-blue">
-              <Lock size={18} className="text-motolink-slate" />
+            <div className="mt-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 focus-within:border-motolink-blue">
+              <Lock size={18} className="text-motolink-slate shrink-0" />
               <input
                 type="password"
                 name="password"
@@ -86,7 +84,7 @@ export default function Login() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full outline-none text-sm"
+                className="w-full min-w-0 outline-none text-sm"
               />
             </div>
             {fieldErrors.password && (
@@ -101,7 +99,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white font-display font-semibold py-2.5 rounded-lg mt-2"
+            className="w-full bg-motolink-blue hover:bg-blue-700 disabled:opacity-50 transition-colors text-white font-display font-semibold py-3 sm:py-2.5 rounded-lg mt-2"
           >
             {submitting ? "Logging in…" : "Log in"}
           </button>

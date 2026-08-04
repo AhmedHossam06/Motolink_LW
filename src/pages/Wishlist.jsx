@@ -66,7 +66,7 @@ export default function Wishlist() {
                 </div>
 
                 <div className="min-w-0">
-                  <h3 className="font-display font-semibold text-motolink-blue-dark break-words">
+                  <h3 className="font-display font-semibold text-motolink-blue-dark wrap-break-words">
                     {item.product.name}
                   </h3>
                   {onSale ? (

@@ -188,7 +188,8 @@ export default function AdminOrders() {
                   {order.items.map((item) => (
                     <li key={item.id} className="flex justify-between gap-3 text-sm">
                       <span className="text-motolink-blue-dark">
-                        {item.product.name} <span className="text-motolink-slate">x{item.quantity}</span>
+                      {item.product?.name ?? item.productName}{" "}
+                      <span className="text-motolink-slate">x{item.quantity}</span>
                       </span>
                       <span className="text-motolink-slate shrink-0">
                         {formatPrice(item.priceAtPurchase * item.quantity)}

@@ -6,13 +6,13 @@ import * as api from "../api";
 import { formatPrice } from "../api";
 
 const STATUS_LABELS = {
-  PENDING: "Order placed",
+  Order_placed: "Order placed",
   SHIPPED: "Shipped",
   CANCELLED: "Cancelled",
 };
 
 const STATUS_STYLES = {
-  PENDING: "bg-amber-50 text-amber-700",
+  Order_placed: "bg-amber-50 text-amber-700",
   SHIPPED: "bg-emerald-50 text-emerald-700",
   CANCELLED: "bg-red-50 text-red-700",
 };
@@ -101,7 +101,7 @@ export default function Profile() {
         {!editing ? (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="font-display font-bold text-xl sm:text-2xl text-motolink-blue-dark break-words">
+              <h1 className="font-display font-bold text-xl sm:text-2xl text-motolink-blue-dark wrap-break-words">
                 {user.name}
               </h1>
               <p className="text-motolink-slate text-sm break-all">{user.email}</p>
@@ -232,7 +232,11 @@ export default function Profile() {
               <ul className="text-sm text-motolink-blue-dark">
                 {order.items.map((item) => (
                   <li key={item.id}>
-                    {item.quantity} × {item.product.name}
+                    {/* FIX: item.product can be null if the product was deleted after this
+                        order was placed (backend sets product_id to NULL on delete but keeps
+                        the order item). Fall back to the saved productName snapshot instead
+                        of crashing on item.product.name. */}
+                    {item.quantity} × {item.product?.name ?? item.productName}
                   </li>
                 ))}
               </ul>

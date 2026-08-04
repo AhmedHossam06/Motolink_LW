@@ -94,7 +94,7 @@ export default function AdminProducts() {
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-display font-semibold text-motolink-blue-dark break-words">
+                        <p className="font-display font-semibold text-motolink-blue-dark wrap-break-words">
                           {p.name}
                         </p>
                         {onSale && (

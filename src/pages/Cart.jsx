@@ -100,7 +100,7 @@ export default function Cart() {
               className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 bg-white border border-motolink-blue-light rounded-xl p-4"
             >
               <div className="flex-1 min-w-0">
-                <h3 className="font-display font-semibold text-motolink-blue-dark break-words">
+                <h3 className="font-display font-semibold text-motolink-blue-dark wrap-break-words">
                   {item.product.name}
                 </h3>
                 {onSale ? (
