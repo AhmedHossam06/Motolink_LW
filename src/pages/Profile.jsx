@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Package, Pencil, X } from "lucide-react";
+import { LogOut, Package, Pencil, X, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import * as api from "../api";
 import { formatPrice } from "../api";
+import { NAME_REGEX, getPasswordStrength } from "../utils";
 
 const STATUS_LABELS = {
   Order_placed: "Order placed",
@@ -30,6 +31,8 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -54,7 +57,14 @@ export default function Profile() {
     setNewPassword("");
     setSaveError("");
     setSaveSuccess(false);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
     setEditing(true);
+  };
+
+  const handleNameChange = (e) => {
+    if (!NAME_REGEX.test(e.target.value)) return; // block symbols/digits in name
+    setName(e.target.value);
   };
 
   const handleSave = async (e) => {
@@ -93,6 +103,8 @@ export default function Profile() {
   };
 
   if (!user) return null;
+
+  const passwordStrength = getPasswordStrength(newPassword);
 
   return (
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
@@ -144,7 +156,7 @@ export default function Profile() {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={handleNameChange}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-motolink-blue"
               />
             </div>
@@ -157,26 +169,72 @@ export default function Profile() {
               <label className="block text-sm font-medium text-motolink-blue-dark mb-1">
                 Current password
               </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Required only to change password"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-motolink-blue"
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Required only to change password"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-motolink-blue"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((prev) => !prev)}
+                  aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-motolink-slate hover:text-motolink-blue-dark cursor-pointer"
+                >
+                  {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-motolink-blue-dark mb-1">
                 New password
               </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-motolink-blue"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-motolink-blue"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-motolink-slate hover:text-motolink-blue-dark cursor-pointer"
+                >
+                  {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+
+              {newPassword && (
+                <div className="mt-1.5">
+                  <div className="flex gap-1 h-1.5">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={`flex-1 rounded-full ${
+                          i < passwordStrength.score ? passwordStrength.color : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p
+                    className={`text-xs mt-1 font-medium ${
+                      passwordStrength.label === "Weak"
+                        ? "text-red-600"
+                        : passwordStrength.label === "Medium"
+                        ? "text-amber-600"
+                        : "text-emerald-600"
+                    }`}
+                  >
+                    {passwordStrength.label}
+                  </p>
+                </div>
+              )}
             </div>
 
             {saveError && <p className="text-red-600 text-sm">{saveError}</p>}

@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { NAME_REGEX, getPasswordStrength } from "../utils";
 
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState({});
   const [generalError, setGeneralError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signupUser, user } = useAuth();
   const navigate = useNavigate();
 
@@ -17,8 +19,11 @@ export default function Signup() {
     }
   }, [user, navigate]);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "name" && !NAME_REGEX.test(value)) return; // block symbols/digits in name
+    setForm({ ...form, [name]: value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,6 +43,8 @@ export default function Signup() {
       setSubmitting(false);
     }
   };
+
+  const passwordStrength = getPasswordStrength(form.password);
 
   return (
     <main className="min-h-[80vh] flex items-center justify-center bg-motolink-blue-light px-4 sm:px-6 py-8 sm:py-12">
@@ -99,7 +106,7 @@ export default function Signup() {
             <div className="mt-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2.5 sm:py-2 focus-within:border-motolink-blue">
               <Lock size={18} className="text-motolink-slate shrink-0" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 required
                 value={form.password}
@@ -107,7 +114,42 @@ export default function Signup() {
                 placeholder="At least 8 characters"
                 className="w-full min-w-0 outline-none text-sm"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="text-motolink-slate hover:text-motolink-blue-dark shrink-0 cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
+
+            {form.password && (
+              <div className="mt-1.5">
+                <div className="flex gap-1 h-1.5">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={`flex-1 rounded-full ${
+                        i < passwordStrength.score ? passwordStrength.color : "bg-gray-200"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p
+                  className={`text-xs mt-1 font-medium ${
+                    passwordStrength.label === "Weak"
+                      ? "text-red-600"
+                      : passwordStrength.label === "Medium"
+                      ? "text-amber-600"
+                      : "text-emerald-600"
+                  }`}
+                >
+                  {passwordStrength.label}
+                </p>
+              </div>
+            )}
+
             {fieldErrors.password && (
               <p className="text-red-600 text-xs mt-1">{fieldErrors.password}</p>
             )}
